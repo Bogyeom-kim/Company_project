@@ -20,5 +20,4 @@ class Auto_mode:
 # 카메라 스레드 - mCamera
 
 # 모듈 간의 데이터 교환 -> Job 시작, 처리
-
-
+print("done1")
