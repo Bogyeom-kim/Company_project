@@ -17,20 +17,15 @@ class Camera:
         self.kCamExposureTime = 12 * 10000
         self.kCamAnalogGain = 70
         self.mGUI = GUI
-        
-    def start(self):
-        result = True
-        self.mGUI.add_message(self.mGUI.gMsg_cam_initial_start)
-        self.mGUI.mLogger.add_log(self.start.__name__ + self.mGUI.gMsg_cam_initial_start)
-        self.cam_initial()
-        self.mGUI.add_message(self.mGUI.gMsg_cam_initial_end)
-        self.mGUI.mLogger.add_log(self.start.__name__ + self.mGUI.gMsg_cam_initial_end)
-        return result
-    
+            
     def cam_initial(self):
+        self.mGUI.add_message(self.mGUI.gMsg_cam_initial_start)
+        self.mGUI.mLogger.add_log(self.cam_initial.__name__ + self.mGUI.gMsg_cam_initial_start)
+        self.mGUI.add_message(self.mGUI.gMsg_cam_initial_end)
+        self.mGUI.mLogger.add_log(self.cam_initial.__name__ + self.mGUI.gMsg_cam_initial_end)
         self.camlist = mvsdk.CameraEnumerateDevice()
         self.nCam = len(self.camlist)
-        print("nDev = ", self.camlist)
+        #print("nDev = ", self.camlist)
         if self.nCam < 1:
             print("There is no camera") 
             self.mGUI.mLogger.add_log(self.cam_initial.__name__)

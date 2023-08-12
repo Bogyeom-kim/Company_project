@@ -19,6 +19,9 @@ from module_datamanager import DataManager
 from module_jobmanager import JobManager
 from module_imagelogger import ImageLogger
 #from module_auto import Auto_mode
+from module_jobs import Job_UpdateSensorDistance
+from module_jobs import Job_CheckSensorDistance
+from module_jobs import Job_AskGrabImage
 import threading
 from queue import Queue
 
@@ -38,8 +41,10 @@ class BK_GUI():
         #self.mAuto_mode = Auto_mode(self)
         self.mJobManager = JobManager(self)
         self.mDataManager = DataManager(self)
-        #self.mJob_CheckSensorDistance = Job_CheckSensorDistance(self)
-        #self.mJob_UpdateSensorDistance = Job_UpdateSensorDistance(self)
+        #Job######################################################################################
+        self.mJob_CheckSensorDistance = Job_CheckSensorDistance(self)
+        self.mJob_UpdateSensorDistance = Job_UpdateSensorDistance(self)
+        self.mJob_AskGrabImage = Job_AskGrabImage(self)
         #Frame####################################################################################
         self.frame_cnt = LabelFrame(self.window, text = "Control Frame", relief="solid", bd=2, bg='red',height = 10,width=100)
         self.frame_cnt.pack(side="bottom", fill = "both", expand = True)
@@ -121,7 +126,7 @@ class BK_GUI():
         #button######################################################################################        
           
         self.mBtn_senConnect = Button(self.frame_cnt, text = self.gLBM_senConnect,
-                                command = lambda:[self.mSensor.start()])
+                                command = lambda:[self.mSensor.sensor_initial()])
         self.mBtn_senConnect.pack(side = "left")
     
         self.mBtn_senCal = Button(self.frame_cnt, text = self.gLBM_senCal,
@@ -133,7 +138,7 @@ class BK_GUI():
         self.mBtn_senStop_cal.pack(side = "left")
     
         self.mBtn_camConnect = Button(self.frame_cnt, text = self.gLBM_camConnect, 
-                                 command = lambda:[self.mCamera.start()])
+                                 command = lambda:[self.mCamera.cam_initial()])
         self.mBtn_camConnect.pack(side = "left")
                         
         self.mBtn_camGrab_image = Button(self.frame_cnt, text = self.gLBM_camGrab_image,
@@ -145,7 +150,7 @@ class BK_GUI():
         self.cam_initial_btn.pack(side = "left")
         
         self.startJob_btn = Button(self.frame_cnt, text = 'Start Job',
-                                command = lambda:[self.cam_startJob(self.log_list)])
+                                command = lambda:[self.mSensor.cmd_start_continuous_fast_distance_measure(1)])
         self.startJob_btn.pack(side = "left")
         
         self.mBtn_camSettiing_exposure = Button(self.frame_cnt, text="Exposure set", bg="green", fg="white", 
@@ -163,20 +168,21 @@ class BK_GUI():
         #GUI Logger###################################################################################
         self.mQueueMessage = Queue()
         self.mQueueImage = Queue()
-        self.mQueueJob = Queue()
          
     def Thread_initial(self):
         self.mMessageThread = threading.Thread(target = self.message_thread, args = ())
         self.mMessageThread.start()
         self.mImageThread = threading.Thread(target = self.image_thread, args=())
         self.mImageThread.start()
-        self.mJobThread = threading.Thread()
         self.add_message("Program has been started")
         
     def add_message(self, data_str):
         self.mQueueMessage.put(data_str)
         #print("data_str = ", data_str)
-                
+    def job_thread(self):
+        while True:
+            self.mJobManager.run()
+        
     def message_thread(self):
         while True:
             data = self.mQueueMessage.get(True,None)
@@ -200,15 +206,7 @@ class BK_GUI():
             self.label_rst.update()
             self.label_rst.see(END)
             self.scroll_rst.config(command=self.label_rst.yview)
-    
-    def add_job(self, new_job):
-        self.mQueueJob.put(new_job)
-
-    def job_thread(self):
-        while True:
-            job = self.mQueueJob.get(True, None) # (block = True, wait = None)z: wait until any job has been queued    
-            job.handle()
-        
+       
     def btn_confirm(self, parameter):
         try:
             if parameter == 1:

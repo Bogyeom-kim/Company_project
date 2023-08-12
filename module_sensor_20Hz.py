@@ -46,14 +46,15 @@ class Sensor:
         print("Now mSerial")
         self.mSerial = serial.Serial(SERIAL_PORT, SERIAL_BAUD_RATE, timeout = None)
         self.mCurrentReplyName = SENSOR_REPLY_NAME.HEAD #### Start
-        self.mSensingDistance = 0
-        self.mPreviousDistance = 0
+        self.mFirstDistance = 0
+        self.mSecondDistance = 0
+        self.mThirdDistance = 0
         self.mDataList = [9999,9999]
         self.mLockForSensingDistance = Lock() #Lock 함수 가져오기
         self.mGUI = GUI
         self.mSensorThread = Thread(target = self.read_thread, args = ())
         
-    def start(self):
+    def sensor_initial(self):
         result = False
         print("Hello")
         self.mGUI.add_message(self.mGUI.gMsg_senConnect_start)
@@ -105,7 +106,8 @@ class Sensor:
 
     def get_sensing_distance(self): # with 문으로 lock을 하면 aqiure(), release()를 안해줘도 된다.
         with self.mLockForSensingDistance:
-            self.mDataList = [self.mPreviousDistance,self.mSensingDistance]
+            self.mDataList = [self.mFirstDistance,self.mSecondDistance, self.mThirdDistance]
+            #self.mGUI.add_message("the get_sensing_distance=", self.mDataList)
             return self.mDataList
 
 
@@ -124,12 +126,12 @@ class Sensor:
         data = []
         count = 0 # for payload distance and payload SQ
         while True:
-            print("Something comming")
             temp = int.from_bytes(self.mSerial.read(), "big", signed = False)
-            self.mPreviousDistance = self.mSensingDistance
+            
+            self.mFirstDistance = self.mSecondDistance
+            self.mSecondDistance = self.mThirdDistance          
             
             if self.mCurrentReplyName == SENSOR_REPLY_NAME.HEAD:
-                print(temp)
                 if temp == REPLY_1SHOT_AUTO_HEAD:
                     data.append(temp)
                     self.mCurrentReplyName = SENSOR_REPLY_NAME.RWADDRESS
@@ -192,7 +194,7 @@ class Sensor:
                     # read
                     ###########################################################
                     #with self.mLockForSensingDistance:
-                    self.mSensingDistance = new_distance # local update
+                    self.mThirdDistance = new_distance # local update
                     ###########################################################
                     #if SensingMode == 1:
                     # tell JobManager to grab the new data
@@ -204,8 +206,10 @@ class Sensor:
                         self.mGUI.add_message((str(new_distance)+' mm'))
 
                     elif self.mSensingMode == 1:
-                        self.mSensorThread.LOCK()
-                        self.mGUI.mJobManager.add_job(Job_UpdateSensorDistance())
+                        self.mGUI.add_message((str(new_distance)+' mm'))
+                        self.mGUI.mLogger.add_log((str(new_distance)+' mm'))
+                        self.mGUI.mJobManager.add_job(self.mGUI.mJob_UpdateSensorDistance)
+                        #print("What is type? ", type(self.mGUI.mJob_UpdateSensorDistance))
                     
                     
                 self.mCurrentReplyName = SENSOR_REPLY_NAME.RESET

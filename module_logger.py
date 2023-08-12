@@ -10,7 +10,7 @@ class Logger:
 
     def __init__(self,GUI):
         #print("Logger __init__ start!!!")
-        self.mLogFileFormat = "./log/logger_"
+        self.mLogFileFormat = "./Log/logger_"
         self.mQueue = Queue()
         self.mThread = threading.Thread(target = self.logging_thread, args = ())
         self.mGUI = GUI

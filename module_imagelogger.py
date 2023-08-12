@@ -42,7 +42,7 @@ class ImageLogger:
     def imagesave_thread(self):
         while True:
             image = self.mQueueImage.get(True,None)
-            date_format = '%Y%m%d_%H%M%S'
+            date_format = '%Y%m%d_%H%M%S.%f'
             image_file_name = self.dirPath + '/' + datetime.now().strftime(date_format) + self.pictureFormat
             frame = cv2.resize(image, (640,480), interpolation = cv2.INTER_LINEAR)
             cv2.imwrite(image_file_name,frame)
